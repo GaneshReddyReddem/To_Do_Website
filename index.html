@@ -1,0 +1,2333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HabitFlow - AI-Powered Habit & Goal Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+            --blur-backdrop: blur(10px);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        .dark {
+            --background-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            backdrop-filter: var(--blur-backdrop);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: var(--radius-lg);
+            padding: 0.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: var(--blur-backdrop);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .greeting {
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Navigation */
+        .nav-container {
+            background: var(--surface-color);
+            padding: 1rem 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 80px;
+            z-index: 999;
+        }
+
+        .nav {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            background: var(--background-color);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .nav-item.active {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        /* Mobile Navigation */
+        .mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav-toggle {
+                display: block;
+            }
+
+            .nav {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--surface-color);
+                box-shadow: var(--shadow-lg);
+                padding: 1rem;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+
+            .nav.show {
+                display: flex;
+                max-height: 300px;
+            }
+
+            .nav-item {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Goal Management */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .add-goal-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .add-goal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .add-goal-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Goal Controls */
+        .goal-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box, .filter-select {
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--surface-color);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Goals Grid */
+        .goals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .goals-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        .goal-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .goal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .goal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .goal-category {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .goal-description {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .goal-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .goal-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .goal-progress {
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+            border-radius: var(--radius-sm);
+        }
+
+        .progress-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .goal-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .goal-btn {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .complete-btn {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .complete-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+
+        .edit-btn {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #d97706;
+            transform: scale(1.05);
+        }
+
+        .delete-btn {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        /* Analytics Section */
+        .analytics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        .analytics-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .analytics-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 200px;
+            }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-lg);
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--background-color);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--text-muted);
+        }
+
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .ai-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-xl);
+            transition: all 0.3s ease;
+        }
+
+        .ai-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .ai-chat {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            height: 400px;
+            background: var(--surface-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-color);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .ai-chat {
+                width: 300px;
+                height: 350px;
+                bottom: 70px;
+                right: -50px;
+            }
+        }
+
+        .ai-chat.show {
+            display: flex;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .ai-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .ai-message {
+            max-width: 80%;
+            padding: 0.75rem;
+            border-radius: var(--radius-lg);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .ai-message.user {
+            background: var(--primary-color);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .ai-message.assistant {
+            background: var(--border-color);
+            color: var(--text-primary);
+            align-self: flex-start;
+        }
+
+        .ai-input-container {
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .ai-send {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ai-send:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Pomodoro Timer */
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: var(--surface-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .timer-display {
+                font-size: 3rem;
+            }
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .timer-btn.start {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .timer-btn.pause {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .timer-btn.reset {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .timer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 2rem;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .toast-container {
+                right: 1rem;
+                left: 1rem;
+            }
+        }
+
+        .toast {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            animation: slideInRight 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .toast {
+                min-width: auto;
+            }
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+
+        .toast.success::before {
+            background: var(--success-color);
+        }
+
+        .toast.error::before {
+            background: var(--error-color);
+        }
+
+        .toast.warning::before {
+            background: var(--warning-color);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast-icon {
+            font-size: 1.25rem;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .toast-message {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+
+        .toast-close:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10002;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary-color);
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Utilities */
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .hidden { display: none !important; }
+        .visible { display: block !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-4 { margin-top: 1rem; }
+        .p-4 { padding: 1rem; }
+        .rounded { border-radius: var(--radius-md); }
+        .shadow { box-shadow: var(--shadow-md); }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .goals-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .section-title {
+                text-align: center;
+                font-size: 1.75rem;
+            }
+
+            .goal-controls {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .search-box, .filter-select {
+                min-width: auto;
+            }
+
+            .timer-container {
+                padding: 1rem;
+                margin: 0 1rem;
+            }
+
+            .ai-assistant {
+                bottom: 1rem;
+                right: 1rem;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+                margin: 1rem;
+                width: calc(100% - 2rem);
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.25rem;
+            }
+
+            .greeting {
+                font-size: 0.875rem;
+            }
+
+            .nav-item {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            .goal-card {
+                padding: 1rem;
+            }
+
+            .goal-title {
+                font-size: 1.1rem;
+            }
+
+            .timer-display {
+                font-size: 2.5rem;
+            }
+
+            .analytics-card {
+                padding: 1rem;
+            }
+
+            .chart-container {
+                height: 180px;
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-chart-line"></i>
+                    HabitFlow
+                </div>
+                <div class="header-actions">
+                    <span class="greeting" id="greeting">Welcome!</span>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="mobile-nav-toggle" id="mobileNavToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="nav-container">
+        <div class="container">
+            <nav class="nav" id="nav">
+                <div class="nav-item active" data-section="daily">
+                    <i class="fas fa-sun"></i> Daily
+                </div>
+                <div class="nav-item" data-section="weekly">
+                    <i class="fas fa-calendar-week"></i> Weekly
+                </div>
+                <div class="nav-item" data-section="monthly">
+                    <i class="fas fa-calendar-alt"></i> Monthly
+                </div>
+                <div class="nav-item" data-section="yearly">
+                    <i class="fas fa-calendar"></i> Yearly
+                </div>
+                <div class="nav-item" data-section="analytics">
+                    <i class="fas fa-chart-pie"></i> Analytics
+                </div>
+                <div class="nav-item" data-section="timer">
+                    <i class="fas fa-clock"></i> Timer
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Daily Section -->
+            <section id="daily" class="section active">
+                <div class="section-header">
+                    <h1 class="section-title">Daily Goals</h1>
+                    <button class="add-goal-btn" onclick="openGoalModal('daily')">
+                        <i class="fas fa-plus"></i> Add Goal
+                    </button>
+                </div>
+                
+                <div class="goal-controls">
+                    <input type="text" class="search-box" placeholder="Search goals..." 
+                           oninput="filterGoals('daily', this.value)">
+                    <select class="filter-select" onchange="filterGoalsByCategory('daily', this.value)">
+                        <option value="">All Categories</option>
+                        <option value="Health">Health</option>
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Hobby">Hobby</option>
+                    </select>
+                </div>
+
+                <div class="goals-grid" id="dailyGoals"></div>
+            </section>
+
+            <!-- Weekly Section -->
+            <section id="weekly" class="section">
+                <div class="section-header">
+                    <h1 class="section-title">Weekly Goals</h1>
+                    <button class="add-goal-btn" onclick="openGoalModal('weekly')">
+                        <i class="fas fa-plus"></i> Add Goal
+                    </button>
+                </div>
+                
+                <div class="goal-controls">
+                    <input type="text" class="search-box" placeholder="Search goals..." 
+                           oninput="filterGoals('weekly', this.value)">
+                    <select class="filter-select" onchange="filterGoalsByCategory('weekly', this.value)">
+                        <option value="">All Categories</option>
+                        <option value="Health">Health</option>
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Hobby">Hobby</option>
+                    </select>
+                </div>
+
+                <div class="goals-grid" id="weeklyGoals"></div>
+            </section>
+
+            <!-- Monthly Section -->
+            <section id="monthly" class="section">
+                <div class="section-header">
+                    <h1 class="section-title">Monthly Goals</h1>
+                    <button class="add-goal-btn" onclick="openGoalModal('monthly')">
+                        <i class="fas fa-plus"></i> Add Goal
+                    </button>
+                </div>
+                
+                <div class="goal-controls">
+                    <input type="text" class="search-box" placeholder="Search goals..." 
+                           oninput="filterGoals('monthly', this.value)">
+                    <select class="filter-select" onchange="filterGoalsByCategory('monthly', this.value)">
+                        <option value="">All Categories</option>
+                        <option value="Health">Health</option>
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Hobby">Hobby</option>
+                    </select>
+                </div>
+
+                <div class="goals-grid" id="monthlyGoals"></div>
+            </section>
+
+            <!-- Yearly Section -->
+            <section id="yearly" class="section">
+                <div class="section-header">
+                    <h1 class="section-title">Yearly Goals</h1>
+                    <button class="add-goal-btn" onclick="openGoalModal('yearly')">
+                        <i class="fas fa-plus"></i> Add Goal
+                    </button>
+                </div>
+                
+                <div class="goal-controls">
+                    <input type="text" class="search-box" placeholder="Search goals..." 
+                           oninput="filterGoals('yearly', this.value)">
+                    <select class="filter-select" onchange="filterGoalsByCategory('yearly', this.value)">
+                        <option value="">All Categories</option>
+                        <option value="Health">Health</option>
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Hobby">Hobby</option>
+                    </select>
+                </div>
+
+                <div class="goals-grid" id="yearlyGoals"></div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section">
+                <div class="section-header">
+                    <h1 class="section-title">Analytics Dashboard</h1>
+                </div>
+
+                <div class="analytics-container">
+                    <div class="analytics-card">
+                        <h3 class="analytics-title">Goals by Category</h3>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3 class="analytics-title">Completion Status</h3>
+                        <div class="chart-container">
+                            <canvas id="completionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3 class="analytics-title">Goals by Timeframe</h3>
+                        <div class="chart-container">
+                            <canvas id="timeframeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3 class="analytics-title">Priority Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="priorityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalGoals">0</div>
+                        <div class="stat-label">Total Goals</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completedGoals">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeGoals">0</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="completionRate">0%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Timer Section -->
+            <section id="timer" class="section">
+                <div class="section-header">
+                    <h1 class="section-title">Pomodoro Timer</h1>
+                </div>
+
+                <div class="timer-container">
+                    <div class="timer-display" id="timerDisplay">25:00</div>
+                    <div class="timer-controls">
+                        <button class="timer-btn start" id="startBtn" onclick="startTimer()">
+                            <i class="fas fa-play"></i> Start
+                        </button>
+                        <button class="timer-btn pause" id="pauseBtn" onclick="pauseTimer()">
+                            <i class="fas fa-pause"></i> Pause
+                        </button>
+                        <button class="timer-btn reset" onclick="resetTimer()">
+                            <i class="fas fa-stop"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Goal Modal -->
+    <div id="goalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add Goal</h2>
+                <button class="close-btn" onclick="closeGoalModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="goalForm">
+                <div class="form-group">
+                    <label class="form-label">Goal Title</label>
+                    <input type="text" id="goalTitle" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="goalDescription" class="form-textarea"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="goalCategory" class="form-select">
+                        <option value="Health">Health</option>
+                        <option value="Work">Work</option>
+                        <option value="Study">Study</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Hobby">Hobby</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select id="goalPriority" class="form-select">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" id="goalDueDate" class="form-input">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeGoalModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Assistant -->
+    <div class="ai-assistant">
+        <button class="ai-toggle" onclick="toggleAIChat()" title="AI Assistant">
+            <i class="fas fa-robot"></i>
+        </button>
+        
+        <div class="ai-chat" id="aiChat">
+            <div class="ai-header">
+                <span>AI Assistant</span>
+                <button class="close-btn" onclick="toggleAIChat()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="ai-messages" id="aiMessages">
+                <div class="ai-message assistant">
+                    Hi! I'm your AI productivity assistant. I can help you with goal suggestions, progress analysis, and motivation. How can I help you today?
+                </div>
+            </div>
+            
+            <div class="ai-input-container">
+                <input type="text" class="ai-input" id="aiInput" placeholder="Ask me anything..." 
+                       onkeypress="if(event.key==='Enter') sendAIMessage()">
+                <button class="ai-send" onclick="sendAIMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Confetti Container -->
+    <div class="confetti" id="confetti"></div>
+
+    <!-- Footer -->
+    <footer style="
+        background: var(--surface-color);
+        backdrop-filter: var(--blur-backdrop);
+        border-top: 1px solid var(--border-color);
+        padding: 1.5rem 2rem;
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 2rem;
+        box-shadow: var(--shadow-sm);
+    ">
+        <p>© 2024 HabitFlow. All rights reserved. Designed and developed by <strong style="color: var(--primary-color);">Ganesh Reddy</strong>.</p>
+    </footer>
+
+    <script>
+        // Global variables
+        let goals = {
+            daily: [],
+            weekly: [],
+            monthly: [],
+            yearly: []
+        };
+
+        let currentSection = 'daily';
+        let currentGoalType = 'daily';
+        let editingGoalId = null;
+        let isDarkMode = false;
+        let userName = '';
+
+        // Timer variables
+        let timerInterval = null;
+        let timerMinutes = 25;
+        let timerSeconds = 0;
+        let isTimerRunning = false;
+
+        // Charts
+        let categoryChart = null;
+        let completionChart = null;
+        let timeframeChart = null;
+        let priorityChart = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            loadData();
+            setupName();
+            setupTheme();
+            setupNavigation();
+            setupMobileNav();
+            renderAllGoals();
+            updateAnalytics();
+            showToast('Welcome to HabitFlow!', 'Your productivity journey starts here.', 'success');
+        }
+
+        // Data Management
+        function loadData() {
+            const savedGoals = localStorage.getItem('habitflowGoals');
+            const savedTheme = localStorage.getItem('habitflowTheme');
+            const savedName = localStorage.getItem('habitflowUserName');
+
+            if (savedGoals) {
+                goals = JSON.parse(savedGoals);
+            }
+
+            if (savedTheme) {
+                isDarkMode = savedTheme === 'dark';
+                applyTheme();
+            }
+
+            if (savedName) {
+                userName = savedName;
+                updateGreeting();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('habitflowGoals', JSON.stringify(goals));
+            localStorage.setItem('habitflowTheme', isDarkMode ? 'dark' : 'light');
+            localStorage.setItem('habitflowUserName', userName);
+        }
+
+        function setupName() {
+            if (!userName) {
+                userName = prompt('Welcome to HabitFlow! What should I call you?') || 'Friend';
+                saveData();
+            }
+            updateGreeting();
+        }
+
+        function updateGreeting() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting = '';
+
+            if (hour < 12) {
+                greeting = `Good morning, ${userName}!`;
+            } else if (hour < 18) {
+                greeting = `Good afternoon, ${userName}!`;
+            } else {
+                greeting = `Good evening, ${userName}!`;
+            }
+
+            document.getElementById('greeting').textContent = greeting;
+        }
+
+        // Theme Management
+        function setupTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('click', toggleTheme);
+            applyTheme();
+        }
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            applyTheme();
+            saveData();
+            showToast('Theme Changed', `Switched to ${isDarkMode ? 'dark' : 'light'} mode`, 'success');
+        }
+
+        function applyTheme() {
+            if (isDarkMode) {
+                document.body.classList.add('dark');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+
+        // Navigation
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const section = item.dataset.section;
+                    switchSection(section);
+                });
+            });
+        }
+
+        function setupMobileNav() {
+            const mobileToggle = document.getElementById('mobileNavToggle');
+            const nav = document.getElementById('nav');
+            
+            mobileToggle.addEventListener('click', () => {
+                nav.classList.toggle('show');
+            });
+
+            // Close mobile nav when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.nav-container') && !e.target.closest('.mobile-nav-toggle')) {
+                    nav.classList.remove('show');
+                }
+            });
+        }
+
+        function switchSection(section) {
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+            // Update sections
+            document.querySelectorAll('.section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.getElementById(section).classList.add('active');
+
+            currentSection = section;
+            
+            // Close mobile nav
+            document.getElementById('nav').classList.remove('show');
+
+            // Update analytics if analytics section is active
+            if (section === 'analytics') {
+                setTimeout(updateAnalytics, 100);
+            }
+        }
+
+        // Goal Management
+        function openGoalModal(type) {
+            currentGoalType = type;
+            editingGoalId = null;
+            
+            document.getElementById('modalTitle').textContent = `Add ${type.charAt(0).toUpperCase() + type.slice(1)} Goal`;
+            document.getElementById('goalForm').reset();
+            document.getElementById('goalModal').classList.add('show');
+        }
+
+        function closeGoalModal() {
+            document.getElementById('goalModal').classList.remove('show');
+            editingGoalId = null;
+        }
+
+        function editGoal(type, id) {
+            const goal = goals[type].find(g => g.id === id);
+            if (!goal) return;
+
+            currentGoalType = type;
+            editingGoalId = id;
+
+            document.getElementById('modalTitle').textContent = `Edit ${type.charAt(0).toUpperCase() + type.slice(1)} Goal`;
+            document.getElementById('goalTitle').value = goal.title;
+            document.getElementById('goalDescription').value = goal.description;
+            document.getElementById('goalCategory').value = goal.category;
+            document.getElementById('goalPriority').value = goal.priority;
+            document.getElementById('goalDueDate').value = goal.dueDate;
+            
+            document.getElementById('goalModal').classList.add('show');
+        }
+
+        // Goal Form Submission
+        document.getElementById('goalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('goalTitle').value.trim();
+            const description = document.getElementById('goalDescription').value.trim();
+            const category = document.getElementById('goalCategory').value;
+            const priority = document.getElementById('goalPriority').value;
+            const dueDate = document.getElementById('goalDueDate').value;
+
+            if (!title) {
+                showToast('Error', 'Please enter a goal title', 'error');
+                return;
+            }
+
+            const goalData = {
+                id: editingGoalId || Date.now().toString(),
+                title,
+                description,
+                category,
+                priority,
+                dueDate,
+                completed: false,
+                createdAt: editingGoalId ? goals[currentGoalType].find(g => g.id === editingGoalId).createdAt : new Date().toISOString(),
+                completedAt: null,
+                progress: 0
+            };
+
+            if (editingGoalId) {
+                const index = goals[currentGoalType].findIndex(g => g.id === editingGoalId);
+                if (index !== -1) {
+                    goals[currentGoalType][index] = { ...goals[currentGoalType][index], ...goalData };
+                    showToast('Goal Updated', 'Your goal has been updated successfully', 'success');
+                }
+            } else {
+                goals[currentGoalType].push(goalData);
+                showToast('Goal Added', `New ${currentGoalType} goal created!`, 'success');
+            }
+
+            saveData();
+            renderGoals(currentGoalType);
+            updateAnalytics();
+            closeGoalModal();
+        });
+
+        function toggleGoalCompletion(type, id) {
+            const goal = goals[type].find(g => g.id === id);
+            if (!goal) return;
+
+            goal.completed = !goal.completed;
+            goal.completedAt = goal.completed ? new Date().toISOString() : null;
+            goal.progress = goal.completed ? 100 : 0;
+
+            if (goal.completed) {
+                showConfetti();
+                showToast('Goal Completed!', `Congratulations on completing "${goal.title}"!`, 'success');
+            } else {
+                showToast('Goal Reopened', `"${goal.title}" marked as active`, 'info');
+            }
+
+            saveData();
+            renderGoals(type);
+            updateAnalytics();
+        }
+
+        function deleteGoal(type, id) {
+            if (!confirm('Are you sure you want to delete this goal?')) return;
+
+            goals[type] = goals[type].filter(g => g.id !== id);
+            showToast('Goal Deleted', 'Goal has been removed', 'warning');
+            
+            saveData();
+            renderGoals(type);
+            updateAnalytics();
+        }
+
+        // Goal Rendering
+        function renderAllGoals() {
+            Object.keys(goals).forEach(type => {
+                renderGoals(type);
+            });
+        }
+
+        function renderGoals(type) {
+            const container = document.getElementById(`${type}Goals`);
+            const filteredGoals = getFilteredGoals(type);
+
+            if (filteredGoals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-target" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No ${type} goals yet</h3>
+                        <p style="color: var(--text-muted);">Click "Add Goal" to create your first ${type} goal!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredGoals.map(goal => createGoalCard(goal, type)).join('');
+        }
+
+        function createGoalCard(goal, type) {
+            const dueDate = goal.dueDate ? new Date(goal.dueDate).toLocaleDateString() : 'No due date';
+            const isOverdue = goal.dueDate && new Date(goal.dueDate) < new Date() && !goal.completed;
+            const priorityColor = {
+                'High': 'var(--error-color)',
+                'Medium': 'var(--warning-color)',
+                'Low': 'var(--success-color)'
+            }[goal.priority];
+
+            return `
+                <div class="goal-card ${goal.completed ? 'completed' : ''}" style="border-left: 4px solid ${priorityColor}">
+                    <div class="goal-header">
+                        <div>
+                            <h3 class="goal-title">${goal.title}</h3>
+                            <span class="goal-category" style="background: ${priorityColor}">${goal.category}</span>
+                        </div>
+                        <div class="goal-meta">
+                            <div class="goal-meta-item">
+                                <i class="fas fa-flag"></i>
+                                ${goal.priority}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${goal.description ? `<p class="goal-description">${goal.description}</p>` : ''}
+                    
+                    <div class="goal-meta">
+                        <div class="goal-meta-item ${isOverdue ? 'text-error' : ''}">
+                            <i class="fas fa-calendar"></i>
+                            ${dueDate}
+                        </div>
+                        <div class="goal-meta-item">
+                            <i class="fas fa-clock"></i>
+                            ${new Date(goal.createdAt).toLocaleDateString()}
+                        </div>
+                    </div>
+
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${goal.progress}%"></div>
+                        </div>
+                        <div class="progress-text">${goal.progress}% Complete</div>
+                    </div>
+                    
+                    <div class="goal-actions">
+                        <button class="goal-btn complete-btn" onclick="toggleGoalCompletion('${type}', '${goal.id}')">
+                            <i class="fas fa-${goal.completed ? 'undo' : 'check'}"></i>
+                            ${goal.completed ? 'Undo' : 'Complete'}
+                        </button>
+                        <button class="goal-btn edit-btn" onclick="editGoal('${type}', '${goal.id}')">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="goal-btn delete-btn" onclick="deleteGoal('${type}', '${goal.id}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Filtering and Search
+        function getFilteredGoals(type) {
+            let filteredGoals = [...goals[type]];
+            
+            // Apply search filter
+            const searchInput = document.querySelector(`#${type} .search-box`);
+            if (searchInput && searchInput.value) {
+                const searchTerm = searchInput.value.toLowerCase();
+                filteredGoals = filteredGoals.filter(goal => 
+                    goal.title.toLowerCase().includes(searchTerm) ||
+                    goal.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply category filter
+            const categorySelect = document.querySelector(`#${type} .filter-select`);
+            if (categorySelect && categorySelect.value) {
+                filteredGoals = filteredGoals.filter(goal => goal.category === categorySelect.value);
+            }
+            
+            return filteredGoals.sort((a, b) => {
+                // Sort by completion status (incomplete first), then by priority, then by due date
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                
+                const priorityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+                if (a.priority !== b.priority) {
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                }
+                
+                if (a.dueDate && b.dueDate) {
+                    return new Date(a.dueDate) - new Date(b.dueDate);
+                }
+                
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+        }
+
+        function filterGoals(type, searchTerm) {
+            renderGoals(type);
+        }
+
+        function filterGoalsByCategory(type, category) {
+            renderGoals(type);
+        }
+
+        // Analytics
+        function updateAnalytics() {
+            updateStatistics();
+            updateCharts();
+        }
+
+        function updateStatistics() {
+            const allGoals = [...goals.daily, ...goals.weekly, ...goals.monthly, ...goals.yearly];
+            const completedGoals = allGoals.filter(goal => goal.completed);
+            const activeGoals = allGoals.filter(goal => !goal.completed);
+            const completionRate = allGoals.length > 0 ? Math.round((completedGoals.length / allGoals.length) * 100) : 0;
+
+            document.getElementById('totalGoals').textContent = allGoals.length;
+            document.getElementById('completedGoals').textContent = completedGoals.length;
+            document.getElementById('activeGoals').textContent = activeGoals.length;
+            document.getElementById('completionRate').textContent = `${completionRate}%`;
+        }
+
+        function updateCharts() {
+            updateCategoryChart();
+            updateCompletionChart();
+            updateTimeframeChart();
+            updatePriorityChart();
+        }
+
+        function updateCategoryChart() {
+            const ctx = document.getElementById('categoryChart');
+            if (!ctx) return;
+
+            const allGoals = [...goals.daily, ...goals.weekly, ...goals.monthly, ...goals.yearly];
+            const categoryData = {};
+            
+            allGoals.forEach(goal => {
+                categoryData[goal.category] = (categoryData[goal.category] || 0) + 1;
+            });
+
+            const data = {
+                labels: Object.keys(categoryData),
+                datasets: [{
+                    data: Object.values(categoryData),
+                    backgroundColor: [
+                        '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            };
+
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCompletionChart() {
+            const ctx = document.getElementById('completionChart');
+            if (!ctx) return;
+
+            const allGoals = [...goals.daily, ...goals.weekly, ...goals.monthly, ...goals.yearly];
+            const completed = allGoals.filter(goal => goal.completed).length;
+            const active = allGoals.length - completed;
+
+            const data = {
+                labels: ['Completed', 'Active'],
+                datasets: [{
+                    data: [completed, active],
+                    backgroundColor: ['#10b981', '#f59e0b'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            };
+
+            if (completionChart) {
+                completionChart.destroy();
+            }
+
+            completionChart = new Chart(ctx, {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTimeframeChart() {
+            const ctx = document.getElementById('timeframeChart');
+            if (!ctx) return;
+
+            const timeframeData = {
+                'Daily': goals.daily.length,
+                'Weekly': goals.weekly.length,
+                'Monthly': goals.monthly.length,
+                'Yearly': goals.yearly.length
+            };
+
+            const data = {
+                labels: Object.keys(timeframeData),
+                datasets: [{
+                    data: Object.values(timeframeData),
+                    backgroundColor: ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            };
+
+            if (timeframeChart) {
+                timeframeChart.destroy();
+            }
+
+            timeframeChart = new Chart(ctx, {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePriorityChart() {
+            const ctx = document.getElementById('priorityChart');
+            if (!ctx) return;
+
+            const allGoals = [...goals.daily, ...goals.weekly, ...goals.monthly, ...goals.yearly];
+            const priorityData = {
+                'High': allGoals.filter(goal => goal.priority === 'High').length,
+                'Medium': allGoals.filter(goal => goal.priority === 'Medium').length,
+                'Low': allGoals.filter(goal => goal.priority === 'Low').length
+            };
+
+            const data = {
+                labels: Object.keys(priorityData),
+                datasets: [{
+                    data: Object.values(priorityData),
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            };
+
+            if (priorityChart) {
+                priorityChart.destroy();
+            }
+
+            priorityChart = new Chart(ctx, {
+                type: 'pie',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Timer Functions
+        function updateTimerDisplay() {
+            const display = document.getElementById('timerDisplay');
+            const minutes = String(timerMinutes).padStart(2, '0');
+            const seconds = String(timerSeconds).padStart(2, '0');
+            display.textContent = `${minutes}:${seconds}`;
+        }
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            
+            isTimerRunning = true;
+            document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Running...';
+            
+            timerInterval = setInterval(() => {
+                if (timerSeconds === 0) {
+                    if (timerMinutes === 0) {
+                        // Timer finished
+                        resetTimer();
+                        showToast('Timer Complete!', 'Time to take a break!', 'success');
+                        showConfetti();
+                        return;
+                    }
+                    timerMinutes--;
+                    timerSeconds = 59;
+                } else {
+                    timerSeconds--;
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Start';
+            showToast('Timer Paused', 'Timer has been paused', 'info');
+        }
+
+        function resetTimer() {
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            timerMinutes = 25;
+            timerSeconds = 0;
+            updateTimerDisplay();
+            document.getElementById('startBtn').innerHTML = '<i class="fas fa-play"></i> Start';
+        }
+
+        // AI Assistant
+        function toggleAIChat() {
+            const aiChat = document.getElementById('aiChat');
+            aiChat.classList.toggle('show');
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('aiInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addAIMessage(message, 'user');
+            input.value = '';
+            
+            // Generate AI response
+            setTimeout(() => {
+                const response = generateAIResponse(message);
+                addAIMessage(response, 'assistant');
+            }, 1000);
+        }
+
+        function addAIMessage(message, sender) {
+            const messagesContainer = document.getElementById('aiMessages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `ai-message ${sender}`;
+            messageElement.textContent = message;
+            
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function generateAIResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            const allGoals = [...goals.daily, ...goals.weekly, ...goals.monthly, ...goals.yearly];
+            const completedGoals = allGoals.filter(goal => goal.completed);
+            const activeGoals = allGoals.filter(goal => !goal.completed);
+            
+            if (message.includes('progress') || message.includes('how am i doing')) {
+                const completionRate = allGoals.length > 0 ? Math.round((completedGoals.length / allGoals.length) * 100) : 0;
+                return `You're doing great! You have ${activeGoals.length} active goals and have completed ${completedGoals.length} goals (${completionRate}% completion rate). Keep up the excellent work!`;
+            }
+            
+            if (message.includes('motivation') || message.includes('motivate')) {
+                const motivationalQuotes = [
+                    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+                    "The way to get started is to quit talking and begin doing.",
+                    "Don't watch the clock; do what it does. Keep going.",
+                    "Believe you can and you're halfway there.",
+                    "The future depends on what you do today."
+                ];
+                return motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+            }
+            
+            if (message.includes('suggest') || message.includes('idea')) {
+                const suggestions = [
+                    "How about adding a daily meditation goal?",
+                    "Consider setting a weekly reading target!",
+                    "A monthly fitness challenge could be great!",
+                    "Why not try a daily gratitude journal?",
+                    "Setting up a morning routine could boost productivity!"
+                ];
+                return suggestions[Math.floor(Math.random() * suggestions.length)];
+            }
+            
+            if (message.includes('stats') || message.includes('analytics')) {
+                return `Here are your stats: ${allGoals.length} total goals, ${completedGoals.length} completed, ${activeGoals.length} active. Your most common category is ${getMostCommonCategory()}.`;
+            }
+            
+            // Default responses
+            const defaultResponses = [
+                "That's an interesting question! How can I help you with your goals today?",
+                "I'm here to help you achieve your goals. What would you like to work on?",
+                "Great question! Remember, consistency is key to achieving your goals.",
+                "Every small step counts towards your bigger goals. How can I support you?",
+                "I believe in your ability to achieve great things! What's your next goal?"
+            ];
+            
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        function getMostCommonCategory() {
+            const allGoals = [...goals.daily, ...goals.weekly, ...goals.monthly, ...goals.yearly];
+            const categoryCount = {};
+            
+            allGoals.forEach(goal => {
+                categoryCount[goal.category] = (categoryCount[goal.category] || 0) + 1;
+            });
+            
+            return Object.keys(categoryCount).reduce((a, b) => categoryCount[a] > categoryCount[b] ? a : b, 'Health');
+        }
+
+        // Toast Notifications
+        function showToast(title, message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <i class="toast-icon ${icons[type]}"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parent.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // Confetti Animation
+        function showConfetti() {
+            const confettiContainer = document.getElementById('confetti');
+            const colors = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confettiPiece = document.createElement('div');
+                    confettiPiece.className = 'confetti-piece';
+                    confettiPiece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confettiPiece.style.left = Math.random() * 100 + '%';
+                    confettiPiece.style.animationDelay = Math.random() * 2 + 's';
+                    confettiPiece.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                    
+                    confettiContainer.appendChild(confettiPiece);
+                    
+                    setTimeout(() => {
+                        confettiPiece.remove();
+                    }, 3000);
+                }, i * 100);
+            }
+        }
+
+        // Service Worker Registration for Offline Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4ge30pOw==')
+                    .then(registration => console.log('SW registered'))
+                    .catch(registrationError => console.log('SW registration failed'));
+            });
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+                document.getElementById('aiChat').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
